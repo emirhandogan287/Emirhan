@@ -1,0 +1,682 @@
+<!doctype html>
+<html lang="tr" data-dem="kan">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>SİS Kaçkar Çayı</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<meta name="description" content="Kaçkar eteklerinde, sisin içinde elle toplanan çay. Demini sen seç.">
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><rect width='32' height='32' rx='7' fill='%2312261D'/><path d='M10 8h12c-1 5-4 6-4 9s3 4 3 7c0 2-2 3-5 3s-5-1-5-3c0-3 3-4 3-7s-3-4-4-9z' fill='%23B3321C'/></svg>">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,400;12..96,500;12..96,700&family=Instrument+Sans:ital,wght@0,400;0,500;0,600;1,400&display=swap">
+<link rel="stylesheet" href="scrollcraft.css">
+<style>
+/* Layout: sisli açık zemin ile gece yeşili arasında sert geçişlerle ilerleyen
+   tek yolculuk. Vurgu rengi çayın kendisi ve demi ziyaretçi seçer. */
+:root {
+  color-scheme: light;
+  /* sis zemini */
+  --fog:        #E2E8E2;
+  --fog-2:      #D3DCD4;
+  --pine:       #12261D;   /* ana mürekkep, derin çay yeşili */
+  --pine-soft:  #3A5446;
+  /* gece zemini */
+  --night:      #0D1A14;
+  --night-2:    #15271E;
+  --bone:       #EEEBE2;
+  --bone-soft:  #AFBDB3;
+  --slope:      #1A3428;   /* yamaç yeşili */
+
+  /* dem: JS ve [data-dem] ile değişir. --tea bardaktaki çay,
+     --accent-day açık zeminde, --accent-night koyu zeminde vurgu. */
+  --tea:          #B3321C;
+  --tea-pale:     #E9B85C;
+  --accent-day:   #A3301C;
+  --accent-night: #F07457;
+
+  --sc-canvas:     var(--fog);
+  --sc-surface:    var(--fog-2);
+  --sc-ink:        var(--pine);
+  --sc-ink-soft:   var(--pine-soft);
+  --sc-accent:     var(--accent-day);
+  --sc-accent-ink: #FBF4EE;
+  --sc-shadow-color: 150 40% 6%;
+
+  --sc-font-display: "Bricolage Grotesque", "Instrument Sans", system-ui, sans-serif;
+  --sc-font-text:    "Instrument Sans", system-ui, -apple-system, "Segoe UI", sans-serif;
+  --sc-font-mono:    "Instrument Sans", system-ui, sans-serif;
+  --sc-r-sm: 4px; --sc-r-md: 8px; --sc-r-lg: 14px;
+}
+html[data-dem="acik"] { --tea: #D08A26; --accent-day: #8A4E0C; --accent-night: #EBB04F; }
+html[data-dem="kan"]  { --tea: #B3321C; --accent-day: #A3301C; --accent-night: #F07457; }
+html[data-dem="koyu"] { --tea: #5B1A10; --accent-day: #6E2215; --accent-night: #DE6A50; }
+
+body { background: var(--sc-canvas); color: var(--sc-ink); font-weight: 400; }
+::selection { background: var(--tea); color: #FBF4EE; }
+
+/* grounds. Token ve color birlikte yeniden tanımlanır. */
+.g-night { --sc-canvas: var(--night); --sc-surface: var(--night-2); --sc-ink: var(--bone);
+  --sc-ink-soft: var(--bone-soft); --sc-accent: var(--accent-night); --sc-accent-ink: #1A0E0A;
+  background: var(--night); color: var(--bone); }
+.g-slope { --sc-canvas: var(--slope); --sc-ink: var(--bone); --sc-ink-soft: #B7C7BC;
+  --sc-accent: var(--accent-night); background: var(--slope); color: var(--bone); }
+.g-fog { background: var(--fog); color: var(--pine); }
+.g-night .sc-display, .g-slope .sc-display { font-weight: 500; letter-spacing: -0.028em; }
+.g-night .sc-body, .g-slope .sc-body { line-height: 1.68; letter-spacing: 0.004em; }
+
+.sc-display { font-weight: 500; font-variation-settings: "opsz" 96; }
+em.t { font-style: normal; color: var(--sc-accent); transition: color 300ms var(--sc-ease-out); }
+
+/* ------------------------------------------------------------------ bar -- */
+.bar {
+  position: fixed; inset: 0 0 auto 0; z-index: var(--sc-z-chrome);
+  display: flex; align-items: center; gap: var(--sc-4);
+  padding-top: calc(var(--sc-3) + env(safe-area-inset-top, 0px));
+  padding-bottom: var(--sc-3);
+  padding-left: max(var(--sc-gutter), env(safe-area-inset-left, 0px));
+  padding-right: max(var(--sc-gutter), env(safe-area-inset-right, 0px));
+  color: var(--bar-ink, var(--pine));
+  transition: color 300ms var(--sc-ease-out);
+  pointer-events: none;
+}
+.bar > * { pointer-events: auto; }
+.bar::before { content: ""; position: absolute; inset: 0; z-index: -1; opacity: 0; transition: opacity 240ms var(--sc-ease-out), background-color 240ms;
+  background: color-mix(in oklab, var(--fog) 86%, transparent); backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px);
+  border-bottom: 1px solid color-mix(in oklab, var(--pine) 10%, transparent); }
+.bar.solid::before { opacity: 1; }
+.bar.on-dark::before { background: color-mix(in oklab, var(--night) 84%, transparent); border-color: rgb(238 235 226 / 0.08); }
+.bar.on-dark { --bar-ink: var(--bone); }
+.mark { display: flex; align-items: center; gap: var(--sc-3); text-decoration: none; color: inherit; }
+.mark__word { font-family: var(--sc-font-display); font-weight: 700; font-size: 1.35rem; letter-spacing: 0.06em; }
+.mark__sub { font-size: var(--sc-t-xs); letter-spacing: 0.06em; opacity: 0.8; }
+.mini-glass { width: 22px; height: 34px; flex: none; }
+.mini-glass .outline { fill: none; stroke: currentColor; stroke-width: 7; }
+.mini-glass .liquid { fill: var(--tea); transition: fill 300ms var(--sc-ease-out); }
+.bar .cta { margin-left: auto; }
+
+.cta {
+  display: inline-flex; align-items: center; justify-content: center; gap: 0.5em;
+  min-height: 44px; padding: 0.6em 1.25em;
+  font: 600 var(--sc-t-sm)/1 var(--sc-font-text); letter-spacing: 0.01em;
+  color: #FBF4EE; background: var(--accent-day);
+  border: 0; border-radius: var(--sc-r-sm); cursor: pointer; text-decoration: none; white-space: nowrap;
+  box-shadow: var(--sc-e1), inset 0 1px 0 rgb(255 255 255 / 0.14);
+  transition: transform 140ms var(--sc-ease-out), background-color 300ms var(--sc-ease-out), box-shadow 160ms var(--sc-ease-out);
+}
+.cta:active { transform: translateY(1px) scale(0.98); }
+.cta:disabled { opacity: 0.5; cursor: not-allowed; }
+@media (hover: hover) and (pointer: fine) { .cta:hover { box-shadow: var(--sc-e2), inset 0 1px 0 rgb(255 255 255 / 0.18); transform: translateY(-1px); } }
+.bar.on-dark .cta, .g-night .cta { background: var(--accent-night); color: #1A0E0A; }
+
+/* ----------------------------------------------------------------- hero -- */
+.hero .sc-stage { background: linear-gradient(180deg, #CFD9D3 0%, #E6EBE5 46%, #DCE3DD 100%); }
+.plane { position: absolute; inset: 0; pointer-events: none; will-change: transform; }
+.plane svg { position: absolute; left: 0; width: 100%; height: auto; }
+.sun {
+  position: absolute; left: 62%; top: 16%; width: 30vmin; aspect-ratio: 1; border-radius: 50%;
+  background: radial-gradient(circle, #F6F1E4 0%, #EFEDE2 36%, rgb(239 237 226 / 0) 70%);
+  transform: translate3d(0, calc(var(--sc-p, 0) * 10vh), 0);
+}
+.p-far  { transform: translate3d(0, calc(var(--sc-p, 0) * -5vh), 0) scale(calc(1 + var(--sc-p, 0) * 0.03)); }
+.p-mid  { transform: translate3d(0, calc(var(--sc-p, 0) * -12vh), 0) scale(calc(1 + var(--sc-p, 0) * 0.05)); }
+.p-near { transform: translate3d(0, calc(var(--sc-p, 0) * -46vh), 0); }
+.p-leaf { transform: translate3d(0, calc(var(--sc-p, 0) * -80vh), 0); }
+.plane svg.ridge { width: 100%; }
+.p-far svg.ridge { bottom: -10vh; height: 80vh; filter: blur(0.6px); }
+.p-mid svg.ridge { bottom: -14vh; height: 72vh; }
+.p-near svg.ridge { top: 70%; height: 150vh; }
+
+.fog { position: absolute; inset: 0; pointer-events: none; }
+.fog i {
+  position: absolute; display: block; border-radius: 50%;
+  background: radial-gradient(closest-side, rgb(244 246 242 / 0.95), rgb(244 246 242 / 0.55) 55%, rgb(244 246 242 / 0));
+  animation: drift 38s ease-in-out infinite alternate;
+}
+.fog--back { transform: translate3d(0, calc(var(--sc-p, 0) * -18vh), 0); }
+.fog--front { transform: translate3d(0, calc(var(--sc-p, 0) * -58vh), 0); opacity: calc(1 - var(--sc-p, 0) * 0.5); }
+@keyframes drift { from { translate: -6vw 0; } to { translate: 6vw 0; } }
+
+.hero__title {
+  position: absolute; z-index: 2; left: 0; right: 0; top: clamp(5.5rem, 21vh, 12rem);
+  padding-inline: max(var(--sc-gutter), env(safe-area-inset-left, 0px));
+  transform: translate3d(0, calc(var(--sc-p, 0) * -8vh), 0) scale(calc(1 - var(--sc-p, 0) * 0.06));
+  transform-origin: 30% 0;
+}
+.hero h1 { font-size: clamp(3rem, 1.4rem + 7.2vw, 8.6rem); line-height: 0.92; letter-spacing: -0.045em; max-width: 11ch; font-weight: 500; }
+.hero__lede { margin-top: var(--sc-5); max-width: 34ch; font-size: var(--sc-t-lg); line-height: 1.45; color: var(--pine-soft); }
+.hero__second {
+  position: absolute; z-index: 6; left: max(var(--sc-gutter), env(safe-area-inset-left, 0px)); right: var(--sc-gutter);
+  bottom: clamp(3rem, 14vh, 9rem); color: var(--bone); max-width: 40rem;
+}
+.hero__second p { font-family: var(--sc-font-display); font-size: var(--sc-t-2xl); line-height: 1.04; letter-spacing: -0.03em; margin: 0; text-wrap: balance; }
+.hero__second small { display: block; margin-top: var(--sc-4); font-size: var(--sc-t-sm); color: #C4D2C8; letter-spacing: 0.02em; }
+
+/* -------------------------------------------------------------- tension -- */
+.tension .sc-stage { display: grid; align-content: center; padding-inline: max(var(--sc-gutter), env(safe-area-inset-left, 0px)); }
+.lines { position: relative; max-width: var(--sc-maxw); width: 100%; margin-inline: auto; min-height: 60vh; }
+.lines p {
+  position: absolute; left: 0; top: 50%; translate: 0 -50%; margin: 0;
+  font-family: var(--sc-font-display); font-size: var(--sc-t-3xl); line-height: 1.02; letter-spacing: -0.035em;
+  max-width: 16ch; text-wrap: balance;
+}
+.lines p:nth-child(2) { font-size: var(--sc-t-2xl); max-width: 22ch; color: #C9D6CD; }
+.lines p:nth-child(4) { left: auto; right: 0; text-align: right; }
+
+/* ----------------------------------------------------------------- shoot -- */
+.shoot { padding-block: var(--sc-section); padding-inline: max(var(--sc-gutter), env(safe-area-inset-left, 0px)); }
+.shoot__grid { max-width: var(--sc-maxw); margin-inline: auto; display: grid; grid-template-columns: 1.05fr 0.95fr; gap: var(--sc-8); align-items: center; }
+.shoot__grid > * { min-width: 0; }
+.shoot h2 { font-size: var(--sc-t-3xl); }
+.shoot .sc-body { color: var(--pine-soft); }
+.drawing { width: 100%; max-width: 30rem; margin-inline: auto; }
+.drawing svg { width: 100%; height: auto; overflow: visible; }
+.drawing .ink { fill: none; stroke: var(--pine); stroke-width: 2.2; stroke-linecap: round; stroke-linejoin: round; }
+.drawing .ink--fine { stroke-width: 1.2; stroke: var(--pine-soft); }
+.drawing .bud { stroke: var(--accent-day); }
+.drawing .callout { font: 500 15px var(--sc-font-text); fill: var(--pine); letter-spacing: 0.02em; }
+.drawing .callout-line { stroke: var(--pine-soft); stroke-width: 1; stroke-dasharray: 3 4; }
+.drawing .ann { opacity: 0; transition: opacity 400ms var(--sc-ease-out); }
+.drawing .ann.on { opacity: 1; }
+.facts { display: grid; grid-template-columns: auto 1fr; gap: var(--sc-2) var(--sc-5); margin: var(--sc-6) 0 0; font-size: var(--sc-t-sm); max-width: 46ch; }
+.facts dt { font-weight: 600; }
+.facts dd { margin: 0; color: var(--pine-soft); }
+
+/* --------------------------------------------------------------- process -- */
+.process .sc-stage { display: flex; align-items: center; }
+.rail { align-items: stretch; gap: clamp(1.25rem, 3vw, 3rem); padding-inline: max(var(--sc-gutter), env(safe-area-inset-left, 0px)); padding-block: 12vh 8vh; }
+.rail__lead { flex: 0 0 min(30rem, 78vw); align-self: center; }
+.rail__lead h2 { font-size: var(--sc-t-3xl); }
+.rail__lead .sc-body { color: var(--pine-soft); margin-top: var(--sc-5); }
+.step { flex: 0 0 clamp(15rem, 26vw, 22rem); display: flex; flex-direction: column; gap: var(--sc-4); }
+.step__art {
+  aspect-ratio: 4 / 5; border-radius: var(--sc-r-md); background: var(--fog-2);
+  box-shadow: var(--sc-edge), var(--sc-e2); display: grid; place-items: center; overflow: hidden;
+}
+.step__art svg { width: 72%; height: auto; }
+.step h3 { font-family: var(--sc-font-display); font-size: var(--sc-t-xl); font-weight: 500; letter-spacing: -0.02em; margin: var(--sc-2) 0 0; }
+.step dl { margin: 0; display: grid; gap: var(--sc-2); font-size: var(--sc-t-sm); }
+.step dt { font-size: var(--sc-t-xs); letter-spacing: 0.1em; text-transform: uppercase; color: var(--pine-soft); font-weight: 600; }
+.step dd { margin: 0 0 var(--sc-2); line-height: 1.5; }
+
+/* ------------------------------------------------------------------ peak -- */
+.peak .sc-stage { display: grid; grid-template-columns: 1fr 1fr; align-items: center; padding-inline: max(var(--sc-gutter), env(safe-area-inset-left, 0px)); gap: var(--sc-7); }
+.peak__copy { max-width: 32rem; justify-self: end; order: 2; }
+.peak__copy h2 { font-size: clamp(3rem, 1.6rem + 5vw, 6.5rem); color: var(--sc-accent); transition: color 300ms var(--sc-ease-out); }
+.peak__copy .sc-body { margin-top: var(--sc-5); font-size: var(--sc-t-lg); line-height: 1.55; color: var(--bone-soft); }
+.peak__copy .sc-body + .sc-body { font-size: var(--sc-t-base); }
+.peak__glass { order: 1; justify-self: center; align-self: end; margin-bottom: 6svh; height: min(74svh, 44rem); aspect-ratio: 200 / 470; position: relative; max-width: 100%; }
+.peak__glass svg { width: 100%; height: 100%; overflow: visible; }
+.glass-edge { fill: rgb(238 235 226 / 0.06); stroke: rgb(238 235 226 / 0.55); stroke-width: 1.6; }
+.glass-shine { fill: none; stroke: rgb(255 255 255 / 0.32); stroke-width: 3; stroke-linecap: round; }
+.saucer { fill: #24382E; stroke: rgb(238 235 226 / 0.3); stroke-width: 1.2; }
+.pot { fill: #DAD5C8; stroke: #F2EFE7; stroke-width: 1; }
+.steam path { fill: none; stroke: rgb(238 235 226 / 0.45); stroke-width: 2.2; stroke-linecap: round; opacity: 0; }
+.steam.on path { animation: steam 3.6s ease-out infinite; }
+.steam.on path:nth-child(2) { animation-delay: 1.1s; }
+.steam.on path:nth-child(3) { animation-delay: 2.2s; }
+@keyframes steam { 0% { opacity: 0; transform: translateY(10px); } 30% { opacity: 0.8; } 100% { opacity: 0; transform: translateY(-26px); } }
+.glow { position: absolute; inset: 20% -30% 0; background: radial-gradient(50% 40% at 50% 62%, color-mix(in oklab, var(--tea) 34%, transparent), transparent 70%); opacity: var(--glow, 0); pointer-events: none; transition: background 300ms; }
+
+/* ----------------------------------------------------------------- range -- */
+.range { padding-block: var(--sc-section); padding-inline: max(var(--sc-gutter), env(safe-area-inset-left, 0px)); }
+.range__in { max-width: var(--sc-maxw); margin-inline: auto; }
+.range h2 { font-size: var(--sc-t-3xl); max-width: 14ch; }
+.range__grid { margin-top: var(--sc-9); display: grid; grid-template-columns: 1.25fr 1fr; grid-template-rows: auto auto; gap: var(--sc-7) var(--sc-8); }
+.harvest { display: grid; grid-template-columns: auto 1fr; gap: var(--sc-6); align-items: end; min-width: 0; }
+.harvest:first-child { grid-row: span 2; grid-template-columns: 1fr; align-items: start; }
+.harvest:first-child .tin { width: clamp(10rem, 22vw, 15rem); }
+.tin {
+  width: clamp(6.5rem, 11vw, 8.5rem); aspect-ratio: 3 / 4.2; position: relative; border-radius: 10px 10px 8px 8px;
+  background: linear-gradient(90deg, #1D3329 0%, #33503F 22%, #284234 48%, #1A2E25 100%);
+  box-shadow: var(--sc-e3), inset 0 1px 0 rgb(255 255 255 / 0.14);
+}
+.tin::before { content: ""; position: absolute; inset: -5% -3% auto; height: 13%; border-radius: 8px;
+  background: linear-gradient(90deg, #22392E, #46634F 30%, #2A4436); box-shadow: 0 3px 6px rgb(0 0 0 / 0.35); }
+.tin__label { position: absolute; inset: 34% 0 18%; display: grid; place-content: center; text-align: center; gap: 2px; padding: 0 6px;
+  background: var(--label, #E6E1D3); color: #1B2A22; }
+.tin__label b { font-family: var(--sc-font-display); font-weight: 700; letter-spacing: 0.12em; font-size: clamp(0.9rem, 1.6vw, 1.4rem); }
+.tin__label span { font-size: 0.62rem; letter-spacing: 0.08em; text-transform: uppercase; }
+.tin__label::after { content: ""; display: block; height: 3px; margin: 4px auto 0; width: 60%; background: var(--tea); transition: background 300ms; }
+.harvest h3 { font-family: var(--sc-font-display); font-size: var(--sc-t-xl); font-weight: 500; margin: 0; letter-spacing: -0.02em; }
+.label { display: grid; grid-template-columns: 6.5rem 1fr; gap: var(--sc-2) var(--sc-4); margin: var(--sc-4) 0 0; font-size: var(--sc-t-sm); }
+.label dt { color: var(--bone-soft); font-size: var(--sc-t-xs); letter-spacing: 0.1em; text-transform: uppercase; padding-top: 0.2em; }
+.label dd { margin: 0; line-height: 1.5; }
+
+/* ----------------------------------------------------------------- close -- */
+.close .sc-stage { display: flex; flex-direction: column; padding-inline: max(var(--sc-gutter), env(safe-area-inset-left, 0px)); padding-top: calc(5rem + env(safe-area-inset-top, 0px)); }
+.close__in { flex: 1; max-width: var(--sc-maxw); width: 100%; margin-inline: auto; display: grid; grid-template-columns: auto 1fr; gap: var(--sc-9); align-items: center; }
+.close__in > * { min-width: 0; }
+.close__glass { width: clamp(7rem, 14vw, 11rem); }
+.close__glass svg { width: 100%; height: auto; overflow: visible; }
+.close h2 { font-size: var(--sc-t-3xl); }
+.close .sc-body { margin-top: var(--sc-4); }
+.dem { display: inline-flex; margin-top: var(--sc-6); padding: 4px; gap: 4px; border-radius: var(--sc-r-md); background: var(--night-2); box-shadow: var(--sc-edge); flex-wrap: wrap; }
+.dem button {
+  min-height: 44px; padding: 0 1.1em; border: 0; border-radius: var(--sc-r-sm); background: transparent; color: var(--bone-soft);
+  font: 500 var(--sc-t-sm)/1 var(--sc-font-text); cursor: pointer; display: inline-flex; align-items: center; gap: 0.55em;
+  transition: background-color 160ms var(--sc-ease-out), color 160ms var(--sc-ease-out);
+}
+.dem button i { width: 0.8em; height: 0.8em; border-radius: 50%; background: var(--sw); box-shadow: inset 0 0 0 1px rgb(255 255 255 / 0.25); }
+.dem button[aria-pressed="true"] { background: #23392E; color: var(--bone); box-shadow: var(--sc-e1); }
+@media (hover: hover) and (pointer: fine) { .dem button:hover { color: var(--bone); } }
+.dem button:active { transform: scale(0.97); }
+.order { margin-top: var(--sc-7); display: flex; flex-wrap: wrap; gap: var(--sc-3); max-width: 34rem; }
+.order label { flex-basis: 100%; font-size: var(--sc-t-sm); color: var(--bone-soft); }
+.order input {
+  flex: 1 1 14rem; min-width: 0; min-height: 44px; padding: 0 1em; border-radius: var(--sc-r-sm);
+  border: 1px solid rgb(238 235 226 / 0.22); background: rgb(238 235 226 / 0.05); color: var(--bone);
+}
+.order input::placeholder { color: #8FA196; }
+.order input:focus-visible { border-color: var(--sc-accent); }
+.order__msg { flex-basis: 100%; margin: 0; font-size: var(--sc-t-sm); color: var(--bone); min-height: 1.5em; }
+.foot { max-width: var(--sc-maxw); width: 100%; margin-inline: auto; display: flex; flex-wrap: wrap; justify-content: space-between; gap: var(--sc-3);
+  padding-block: var(--sc-5) calc(var(--sc-5) + env(safe-area-inset-bottom, 0px)); border-top: 1px solid rgb(238 235 226 / 0.12); font-size: var(--sc-t-xs); color: var(--bone-soft); }
+
+/* ---------------------------------------------------------------- mobile -- */
+@media (max-width: 860px) {
+  .mark__sub { display: none; }
+  .hero h1 { font-size: clamp(2.6rem, 11vw, 3.6rem); }
+  .hero__lede { font-size: var(--sc-t-base); }
+  .hero__second p { font-size: var(--sc-t-xl); }
+  .p-near svg.ridge { top: 68%; }
+  .p-far svg.ridge { bottom: -4vh; height: 64vh; }
+  .p-mid svg.ridge { bottom: -8vh; height: 56vh; }
+  .p-near { transform: translate3d(0, calc(var(--sc-p, 0) * -40vh), 0); }
+  .lines p, .lines p:nth-child(4) { font-size: var(--sc-t-2xl); right: auto; left: 0; text-align: left; }
+  .lines p:nth-child(2) { font-size: var(--sc-t-xl); }
+  .shoot__grid { grid-template-columns: 1fr; gap: var(--sc-7); }
+  .peak .sc-stage { grid-template-columns: 1fr; grid-template-rows: 1fr auto; gap: var(--sc-4); padding-block: 4.5rem 2rem; align-content: center; }
+  .peak__glass { order: 1; height: min(50svh, 26rem); }
+  .peak__copy { order: 2; justify-self: start; }
+  .peak__copy h2 { font-size: var(--sc-t-2xl); }
+  .peak__copy .sc-body { font-size: var(--sc-t-base); margin-top: var(--sc-3); }
+  .peak__copy .sc-body + .sc-body { display: none; }
+  .range__grid { grid-template-columns: 1fr; margin-top: var(--sc-7); }
+  .harvest:first-child { grid-row: auto; grid-template-columns: auto 1fr; align-items: end; }
+  .harvest:first-child .tin, .tin { width: 6.5rem; }
+  .label { grid-template-columns: 5.5rem 1fr; }
+  .close__in { grid-template-columns: 1fr; gap: var(--sc-5); align-content: center; }
+  .close__glass { width: 4.5rem; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .fog i { animation: none; }
+  .plane, .fog--back, .fog--front, .hero__title, .sun { transform: none !important; }
+  .hero__second { opacity: 1 !important; }
+  .steam.on path { animation: none; opacity: 0.5; }
+}
+</style>
+</head>
+<body>
+
+<div class="sc-grain" aria-hidden="true"></div>
+
+<header class="bar" id="bar">
+  <a class="mark" href="#top" aria-label="SİS, sayfanın başına dön">
+    <svg class="mini-glass" viewBox="0 0 200 300" aria-hidden="true">
+      <defs><clipPath id="mg"><path d="M40 20C44 70 66 100 66 130 66 160 48 185 50 215 52 240 70 252 100 252 130 252 148 240 150 215 152 185 134 160 134 130 134 100 156 70 160 20Z"/></clipPath></defs>
+      <rect class="liquid" id="miniLiquid" x="0" y="252" width="200" height="260" clip-path="url(#mg)"/>
+      <path class="outline" d="M40 20C44 70 66 100 66 130 66 160 48 185 50 215 52 240 70 252 100 252 130 252 148 240 150 215 152 185 134 160 134 130 134 100 156 70 160 20Z"/>
+    </svg>
+    <span class="mark__word">SİS</span>
+    <span class="mark__sub">Kaçkar çayı</span>
+  </a>
+  <a class="cta" href="#siparis">Ön sipariş</a>
+</header>
+
+<main id="top">
+
+  <!-- 1 · DİNGİNLİK: katmanlı yamaç -->
+  <section class="hero" data-sc-act="pin" data-sc-span="1.7" aria-label="Giriş">
+    <div data-sc-stage>
+      <div class="sun" aria-hidden="true"></div>
+      <div class="plane p-far" aria-hidden="true"><svg class="ridge" id="ridgeFar" viewBox="0 0 2400 1000" preserveAspectRatio="xMidYMax slice"></svg></div>
+      <div class="fog fog--back" aria-hidden="true">
+        <i style="left:-10%;top:44%;width:70vw;height:22vh"></i>
+        <i style="left:40%;top:50%;width:80vw;height:18vh;animation-duration:46s"></i>
+      </div>
+      <div class="plane p-mid" aria-hidden="true"><svg class="ridge" id="ridgeMid" viewBox="0 0 2400 1000" preserveAspectRatio="xMidYMax slice"></svg></div>
+
+      <div class="hero__title">
+        <h1 class="sc-display" data-sc-cue="0 0.62 0" data-sc-kinetic="lines">Sisin içinden gelen çay.</h1>
+        <p class="hero__lede" data-sc-cue="0 0.5 0">Rize'nin yukarısında, Kaçkar eteklerinde, bulutun hizasında elle toplanır.</p>
+      </div>
+
+      <div class="fog fog--front" aria-hidden="true" style="z-index:3">
+        <i style="left:-20%;top:58%;width:90vw;height:26vh;animation-duration:52s"></i>
+        <i style="left:50%;top:64%;width:70vw;height:24vh;animation-duration:34s"></i>
+      </div>
+      <div class="plane p-near" aria-hidden="true" style="z-index:4"><svg class="ridge" id="ridgeNear" viewBox="0 0 2400 1500" preserveAspectRatio="xMidYMin slice"></svg></div>
+      <div class="plane p-leaf" aria-hidden="true" style="z-index:5">
+        <svg viewBox="0 0 400 300" style="left:-6%;bottom:-24%;width:min(42vw,34rem);filter:blur(3px)"><path d="M20 290C60 160 170 60 380 20 340 190 220 290 20 290Z" fill="#0F2219"/><path d="M30 284C140 200 250 110 370 30" stroke="#1E3A2C" stroke-width="5" fill="none"/></svg>
+        <svg viewBox="0 0 400 300" style="right:-8%;left:auto;bottom:-30%;width:min(36vw,28rem);filter:blur(4px);transform:scaleX(-1) rotate(8deg)"><path d="M20 290C60 160 170 60 380 20 340 190 220 290 20 290Z" fill="#132A1F"/><path d="M30 284C140 200 250 110 370 30" stroke="#21402F" stroke-width="5" fill="none"/></svg>
+      </div>
+
+      <div class="hero__second" data-sc-cue="0.56 1 0.4 0">
+        <p>Burada sabah, öğleye kadar sürer.</p>
+        <small>Sis güneşi süzer, yaprak yavaş büyür.</small>
+      </div>
+    </div>
+  </section>
+
+  <!-- 2 · TANIMA: satırlar -->
+  <section class="tension g-slope" data-sc-act="pin" data-sc-span="2.3" aria-label="Neden farklı">
+    <div data-sc-stage>
+      <div class="lines">
+        <p data-sc-cue="0 0.3 0" data-sc-kinetic="lines">Çoğu çay acele eder.</p>
+        <p data-sc-cue="0.24 0.56">Makasla biçilir, toz olana kadar kırılır, bir poşete girip unutulur.</p>
+        <p data-sc-cue="0.5 0.8" data-sc-kinetic="lines">Sis ise beklemeyi bilir.</p>
+        <p data-sc-cue="0.76" data-sc-kinetic="lines">Biz de <em class="t">onu</em> bekleriz.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- 3 · MERAK: kendini çizen sürgün -->
+  <section class="shoot g-fog" id="surgun" data-sc-act="flow" aria-labelledby="surgun-h">
+    <div class="shoot__grid">
+      <div class="sc-stack" data-sc-in data-sc-stagger="70">
+        <h2 class="sc-display" id="surgun-h">İki yaprak, bir tomurcuk.</h2>
+        <p class="sc-body">Toplayıcı sürgünün yalnızca ucunu alır: en üstteki kapalı tomurcuğu ve altındaki iki taze yaprağı. Makas bütün dalı biçer, el sadece ucu seçer.</p>
+        <p class="sc-body">Yamaç dik, sıralar dar. Sepet sırtta, eller önde. Bir sabahın işi, bir avuç çaydır.</p>
+        <dl class="facts">
+          <dt>Yer</dt><dd>Kaçkar etekleri, Rize</dd>
+          <dt>Toplama</dt><dd>Elle, sabah sisi kalkmadan</dd>
+          <dt>Seçim</dt><dd>Tomurcuk ve ilk iki yaprak</dd>
+        </dl>
+      </div>
+      <figure class="drawing" aria-label="Çay sürgünü çizimi: tomurcuk ve altında iki yaprak" style="margin:0">
+        <svg viewBox="0 0 420 540" id="shootSvg">
+          <path class="ink draw" pathLength="1" d="M214 530C212 450 206 380 210 300 213 230 222 160 226 96"/>
+          <path class="ink draw" pathLength="1" d="M210 330C170 318 120 300 86 262 64 236 58 206 64 186 104 196 146 214 176 248 196 270 206 300 210 330Z"/>
+          <path class="ink ink--fine draw" pathLength="1" d="M206 322C170 286 118 230 70 192"/>
+          <path class="ink draw" pathLength="1" d="M216 236C252 222 300 196 330 156 348 132 352 104 346 86 310 98 272 120 246 152 228 176 218 206 216 236Z"/>
+          <path class="ink ink--fine draw" pathLength="1" d="M220 228C252 190 298 136 340 94"/>
+          <path class="ink bud draw" pathLength="1" d="M226 100C214 76 212 46 226 14 242 44 242 76 226 100Z"/>
+          <g class="ann" data-at="0.42"><line class="callout-line" x1="236" y1="40" x2="300" y2="30"/><text class="callout" x="306" y="35">tomurcuk</text></g>
+          <g class="ann" data-at="0.5"><line class="callout-line" x1="320" y1="130" x2="368" y2="170"/><text class="callout" x="330" y="190">ilk yaprak</text></g>
+          <g class="ann" data-at="0.58"><line class="callout-line" x1="96" y1="240" x2="40" y2="300"/><text class="callout" x="6" y="320">ikinci yaprak</text></g>
+          <g class="ann" data-at="0.66"><line class="callout-line" x1="212" y1="430" x2="270" y2="430"/><text class="callout" x="278" y="435">burası kalır</text></g>
+        </svg>
+      </figure>
+    </div>
+  </section>
+
+  <!-- 4 · GÜVEN: yapraktan siyaha -->
+  <section class="process g-fog" data-sc-act="pan" data-sc-span="2.8" aria-labelledby="adim-h">
+    <div data-sc-stage>
+      <div class="rail" data-sc-pan="0.04">
+        <div class="rail__lead">
+          <h2 class="sc-display" id="adim-h">Yapraktan siyaha dört adım.</h2>
+          <p class="sc-body">Aynı yaprak birkaç gün içinde yeşilden bakıra, bakırdan siyaha döner. Her adımda bir şey verir, bir şey kazanır.</p>
+        </div>
+        <article class="step">
+          <div class="step__art" data-sc-tilt="5"><svg viewBox="0 0 200 240" aria-hidden="true"><path d="M100 226C64 180 40 128 52 74 60 40 82 18 100 10 118 18 140 40 148 74 160 128 136 180 100 226Z" fill="#5E7A3A" transform="rotate(14 100 120)"/><path d="M100 220C98 160 98 90 100 16" stroke="#3E5526" stroke-width="3" fill="none" transform="rotate(14 100 120)"/></svg></div>
+          <h3>Soldurma</h3>
+          <dl><dt>Ne olur</dt><dd>Yaprak serilir, suyunun bir kısmını verir, yumuşar.</dd><dt>Neden</dt><dd>Sert yaprak kıvrılmaz, kırılır.</dd></dl>
+        </article>
+        <article class="step">
+          <div class="step__art" data-sc-tilt="5"><svg viewBox="0 0 200 240" aria-hidden="true"><path d="M70 200C60 150 74 90 104 50 120 30 140 30 146 42 150 70 136 120 118 160 104 190 86 206 70 200Z" fill="#55693A"/><path d="M78 196C92 150 112 96 140 44M92 120C108 126 122 120 132 110M84 160C100 162 112 156 120 146" stroke="#34451F" stroke-width="3" fill="none"/></svg></div>
+          <h3>Kıvırma</h3>
+          <dl><dt>Ne olur</dt><dd>Yaprak sarılıp ezilir, hücreleri açılır, öz suyu yüzeye çıkar.</dd><dt>Neden</dt><dd>Hava öz suyla buluşmadan renk değişmez.</dd></dl>
+        </article>
+        <article class="step">
+          <div class="step__art" data-sc-tilt="5"><svg viewBox="0 0 200 240" aria-hidden="true"><path d="M70 200C60 150 74 90 104 50 120 30 140 30 146 42 150 70 136 120 118 160 104 190 86 206 70 200Z" fill="#9A5A2A"/><path d="M78 196C92 150 112 96 140 44M92 120C108 126 122 120 132 110M84 160C100 162 112 156 120 146" stroke="#6B3818" stroke-width="3" fill="none"/></svg></div>
+          <h3>Oksidasyon</h3>
+          <dl><dt>Ne olur</dt><dd>Serin, nemli odada dinlenir; yeşil yaprak bakır rengine döner.</dd><dt>Neden</dt><dd>Siyah çayın rengi ve gövdesi burada oluşur.</dd></dl>
+        </article>
+        <article class="step">
+          <div class="step__art" data-sc-tilt="5"><svg viewBox="0 0 200 240" aria-hidden="true"><g fill="#231A14"><path d="M60 80c10-8 34-6 40 4s-12 14-24 12-24-8-16-16z"/><path d="M110 120c14-6 38 2 40 12s-18 12-30 8-22-14-10-20z"/><path d="M58 150c12-4 30 4 32 12s-16 10-26 6-18-14-6-18z"/><path d="M104 176c10-8 30-4 34 4s-14 14-24 10-18-8-10-14z"/><path d="M96 54c8-6 26-4 28 4s-12 10-20 8-14-6-8-12z"/></g></svg></div>
+          <h3>Kurutma</h3>
+          <dl><dt>Ne olur</dt><dd>Sıcak havayla kurutulur, kıvrık siyah taneye dönüşür.</dd><dt>Neden</dt><dd>Durdurulan oksidasyon, yıllarca bozulmayan çay demektir.</dd></dl>
+        </article>
+      </div>
+    </div>
+  </section>
+
+  <!-- 5 · HAYRANLIK: bardak (doruk) -->
+  <section class="peak g-night" id="bardak" data-sc-act="pin" data-sc-span="3.4" aria-labelledby="bardak-h">
+    <div data-sc-stage>
+      <div class="peak__glass" aria-hidden="true">
+        <div class="glow" id="glow"></div>
+        <svg viewBox="0 -170 200 470" style="overflow:visible">
+          <defs>
+            <clipPath id="gc"><path d="M42 22C46 72 67 102 67 130 67 160 50 185 52 214 54 238 71 249 100 249 129 249 146 238 148 214 150 185 133 160 133 130 133 102 154 72 158 22Z"/></clipPath>
+            <linearGradient id="teaShade" x1="0" x2="1">
+              <stop offset="0" stop-color="#000" stop-opacity="0.35"/><stop offset="0.35" stop-color="#000" stop-opacity="0"/>
+              <stop offset="0.75" stop-color="#fff" stop-opacity="0.12"/><stop offset="1" stop-color="#000" stop-opacity="0.3"/>
+            </linearGradient>
+          </defs>
+          <!-- demlik ağzı -->
+          <g id="pot" style="transition:transform 600ms var(--sc-ease-out)">
+            <path class="pot" d="M150 -118C138 -116 118 -112 104 -108 96 -106 90 -104 87 -100 92 -98 100 -100 108 -102 124 -104 140 -104 152 -104Z"/>
+            <path class="pot" d="M146 -150C146 -186 178 -204 210 -204 242 -204 274 -186 274 -150 274 -114 246 -84 210 -84 174 -84 146 -114 146 -150Z"/>
+            <path d="M152 -138C170 -132 250 -132 268 -138" fill="none" stroke="var(--tea)" stroke-width="5" style="transition:stroke 300ms"/>
+            <ellipse class="pot" cx="210" cy="-204" rx="34" ry="7"/>
+            <circle class="pot" cx="210" cy="-214" r="7"/>
+          </g>
+          <rect id="stream" x="85.5" y="-101" width="5" height="0" rx="2.5" fill="#B3321C"/>
+          <ellipse class="saucer" cx="100" cy="262" rx="96" ry="15"/>
+          <ellipse cx="100" cy="258" rx="58" ry="7" fill="#1B2D24"/>
+          <g clip-path="url(#gc)">
+            <rect id="tea" x="0" y="249" width="200" height="240" fill="#E9B85C"/>
+            <rect x="0" y="0" width="200" height="260" fill="url(#teaShade)"/>
+            <ellipse id="teaTop" cx="100" cy="249" rx="60" ry="4" fill="#fff" opacity="0.18"/>
+          </g>
+          <path class="glass-edge" d="M42 22C46 72 67 102 67 130 67 160 50 185 52 214 54 238 71 249 100 249 129 249 146 238 148 214 150 185 133 160 133 130 133 102 154 72 158 22Z"/>
+          <ellipse cx="100" cy="22" rx="58" ry="5" fill="none" stroke="rgb(238 235 226 / 0.6)" stroke-width="1.4"/>
+          <path class="glass-shine" d="M58 40C62 76 78 100 78 128"/>
+          <path class="glass-shine" d="M66 196C62 214 66 230 76 238" style="stroke-width:2"/>
+          <g class="steam" id="steam"><path d="M82 4C74 -14 92 -24 84 -42"/><path d="M102 0C94 -20 112 -30 104 -52"/><path d="M120 4C112 -14 130 -24 122 -40"/></g>
+        </svg>
+      </div>
+      <div class="peak__copy">
+        <h2 class="sc-display" id="bardak-h" data-sc-cue="0.5 1 0.3 0" data-sc-kinetic="lines">Tavşan kanı.</h2>
+        <p class="sc-body" data-sc-cue="0.58 1 0.3 0">Demlikte koyulaşan çay, çaydanlığın suyuyla açılır. Oran tuttuğunda ışığa tutulan bardak kızıl bir yakut gibi parlar. Karadeniz buna tavşan kanı der.</p>
+        <p class="sc-body" data-sc-cue="0.66 1 0.3 0">İnce belli bardak bu yüzden şeffaftır: çay önce gözle içilir.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- 6 · İŞTAH: üç hasat -->
+  <section class="range g-night" id="hasat" data-sc-act="flow" aria-labelledby="hasat-h">
+    <div class="range__in">
+      <h2 class="sc-display" id="hasat-h" data-sc-in>Üç hasat, üç ayrı çay.</h2>
+      <div class="range__grid" data-sc-in data-sc-stagger="80">
+        <article class="harvest">
+          <div class="tin" data-sc-tilt="6" style="--label:#E8E3D4"><div class="tin__label"><b>SİS</b><span>İlk hasat</span></div></div>
+          <div>
+            <h3>İlk Hasat</h3>
+            <dl class="label"><dt>Aylar</dt><dd>Mayıs, Haziran</dd><dt>Yaprak</dt><dd>Kışı dinlenmiş bitkinin ilk sürgünü</dd><dt>Bardakta</dt><dd>Açık renkli, çiçeksi, ince bir burukluk</dd><dt>Paket</dt><dd>250 g, dökme</dd></dl>
+          </div>
+        </article>
+        <article class="harvest">
+          <div class="tin" data-sc-tilt="6" style="--label:#CFD8CB"><div class="tin__label"><b>SİS</b><span>Yaz</span></div></div>
+          <div>
+            <h3>Yaz Hasadı</h3>
+            <dl class="label"><dt>Aylar</dt><dd>Temmuz, Ağustos</dd><dt>Bardakta</dt><dd>Dolgun gövdeli, her günün demlik çayı</dd><dt>Paket</dt><dd>500 g, dökme</dd></dl>
+          </div>
+        </article>
+        <article class="harvest">
+          <div class="tin" data-sc-tilt="6" style="--label:#D9CBB6"><div class="tin__label"><b>SİS</b><span>Güz</span></div></div>
+          <div>
+            <h3>Güz Hasadı</h3>
+            <dl class="label"><dt>Aylar</dt><dd>Eylül, Ekim</dd><dt>Bardakta</dt><dd>Koyu ve tok, serin gecelerin yaprağı</dd><dt>Paket</dt><dd>250 g, dökme</dd></dl>
+          </div>
+        </article>
+      </div>
+    </div>
+  </section>
+
+  <!-- 7 · KARAR: demini seç -->
+  <section class="close g-night" id="siparis" data-sc-act="pin" data-sc-span="1.1" aria-labelledby="siparis-h">
+    <div data-sc-stage>
+      <div class="close__in">
+        <div class="close__glass" aria-hidden="true">
+          <svg viewBox="0 0 200 300">
+            <defs><clipPath id="cg"><path d="M42 22C46 72 67 102 67 130 67 160 50 185 52 214 54 238 71 249 100 249 129 249 146 238 148 214 150 185 133 160 133 130 133 102 154 72 158 22Z"/></clipPath></defs>
+            <ellipse class="saucer" cx="100" cy="262" rx="96" ry="15"/>
+            <rect x="0" y="36" width="200" height="260" clip-path="url(#cg)" style="fill:var(--tea);transition:fill 300ms var(--sc-ease-out)"/>
+            <path class="glass-edge" d="M42 22C46 72 67 102 67 130 67 160 50 185 52 214 54 238 71 249 100 249 129 249 146 238 148 214 150 185 133 160 133 130 133 102 154 72 158 22Z"/>
+            <path class="glass-shine" d="M58 40C62 76 78 100 78 128"/>
+          </svg>
+        </div>
+        <div>
+          <h2 class="sc-display" id="siparis-h" data-sc-cue="0.02" data-sc-kinetic="lines">Demini sen ayarla.</h2>
+          <p class="sc-body" data-sc-cue="0.04">Seç, bütün sayfa o renge demlensin. Seçimin ön sipariş notuna eklenir.</p>
+          <div class="dem" role="group" aria-label="Dem seçimi" data-sc-cue="0.06" data-sc-rise="0">
+            <button type="button" data-dem="acik" aria-pressed="false" style="--sw:#D08A26"><i></i>Açık</button>
+            <button type="button" data-dem="kan" aria-pressed="true" style="--sw:#B3321C"><i></i>Tavşan kanı</button>
+            <button type="button" data-dem="koyu" aria-pressed="false" style="--sw:#5B1A10"><i></i>Koyu</button>
+          </div>
+          <form class="order" id="orderForm" novalidate data-sc-cue="0.08" data-sc-rise="0">
+            <label for="email">İlk hasat paketlendiğinde haber verelim.</label>
+            <input id="email" name="email" type="email" autocomplete="email" placeholder="e-posta adresin" required>
+            <button class="cta" type="submit">Ön sipariş</button>
+            <p class="order__msg" id="orderMsg" role="status" aria-live="polite"></p>
+          </form>
+        </div>
+      </div>
+      <footer class="foot">
+        <span>SİS Çay · Kaçkar etekleri, Rize</span>
+        <span>SİS kurgusal bir markadır; bu sayfa bir tasarım çalışmasıdır.</span>
+      </footer>
+    </div>
+  </section>
+
+</main>
+
+<script src="scrollcraft.js"></script>
+<script>
+(function () {
+  'use strict';
+  var root = document.documentElement;
+  var reduce = matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+  /* ------------------------------------------------ yamaçları çiz -- */
+  function rng(seed) { return function () { seed |= 0; seed = seed + 0x6D2B79F5 | 0; var t = Math.imul(seed ^ seed >>> 15, 1 | seed); t = t + Math.imul(t ^ t >>> 7, 61 | t) ^ t; return ((t ^ t >>> 14) >>> 0) / 4294967296; }; }
+  function noise(seed, step) {
+    var r = rng(seed), pts = []; for (var i = 0; i < 2400 / step + 3; i++) pts.push(r());
+    return function (x) { x = x < 0 ? 0 : x > 2399 ? 2399 : x; var i = Math.floor(x / step), f = x / step - i, s = (1 - Math.cos(f * Math.PI)) / 2; return pts[i] * (1 - s) + pts[i + 1] * s; };
+  }
+  function ridgeY(seed, base, a1, a2, a3) {
+    var n1 = noise(seed, 420), n2 = noise(seed + 7, 130), n3 = noise(seed + 13, 38);
+    return function (x) { return base - n1(x) * a1 - n2(x) * a2 - n3(x) * a3; };
+  }
+  function ridgePath(fy, h) {
+    var d = 'M0 ' + h + ' L0 ' + fy(0).toFixed(1);
+    for (var x = 12; x <= 2400; x += 12) d += ' L' + x + ' ' + fy(x).toFixed(1);
+    return d + ' L2400 ' + h + ' Z';
+  }
+  var NS = 'http://www.w3.org/2000/svg';
+  function add(svg, tag, attrs) { var el = document.createElementNS(NS, tag); for (var k in attrs) el.setAttribute(k, attrs[k]); svg.appendChild(el); return el; }
+
+  var far = document.getElementById('ridgeFar');
+  function grad(svg, id, a, b, y0, y1) {
+    var defs = svg.querySelector('defs') || add(svg, 'defs', {});
+    var g = document.createElementNS(NS, 'linearGradient');
+    g.setAttribute('id', id); g.setAttribute('gradientUnits', 'userSpaceOnUse');
+    g.setAttribute('x1', 0); g.setAttribute('x2', 0); g.setAttribute('y1', y0); g.setAttribute('y2', y1);
+    g.innerHTML = '<stop offset="0" stop-color="' + a + '"/><stop offset="1" stop-color="' + b + '"/>';
+    defs.appendChild(g); return 'url(#' + id + ')';
+  }
+  add(far, 'path', { d: ridgePath(ridgeY(3, 520, 300, 90, 18), 1000), fill: grad(far, 'gf', '#AEBDB5', '#DDE4DE', 240, 620) });
+  var mid = document.getElementById('ridgeMid');
+  add(mid, 'path', { d: ridgePath(ridgeY(11, 560, 210, 80, 14), 1000), fill: grad(mid, 'gm1', '#7F978A', '#D2DBD4', 330, 680) });
+  add(mid, 'path', { d: ridgePath(ridgeY(29, 640, 120, 50, 10), 1000), fill: grad(mid, 'gm2', '#5F7B6C', '#C6D1C9', 480, 800) });
+
+  var near = document.getElementById('ridgeNear');
+  var top = ridgeY(5, 300, 150, 60, 6);
+  add(near, 'path', { d: ridgePath(top, 1500), fill: '#1A3428' });
+  // çay sıraları: yamaç çizgisini izleyen, aşağı indikçe açılan ve yassılaşan noktalı sıralar
+  for (var k = 1; k <= 16; k++) {
+    var off = 14 * k + 2.2 * k * k, w = Math.min(0.85, k * 0.07), d = '';
+    for (var x = -20; x <= 2420; x += 16) {
+      var y = top(x) * (1 - w) + 300 * w + off;
+      d += (x === -20 ? 'M' : ' L') + x + ' ' + y.toFixed(1);
+    }
+    var r = 5 + k * 1.3;
+    add(near, 'path', { d: d, fill: 'none', stroke: k % 2 ? '#2C5140' : '#264A39', 'stroke-width': (r * 1.6).toFixed(1),
+      'stroke-linecap': 'round', 'stroke-dasharray': '0.1 ' + (r * 2.1).toFixed(1), opacity: 0.95 });
+  }
+
+  /* ------------------------------------------------ dem kontrolü (imza) -- */
+  var demButtons = document.querySelectorAll('.dem button');
+  var demLabels = { acik: 'Açık', kan: 'Tavşan kanı', koyu: 'Koyu' };
+  function setDem(v) {
+    if (!demLabels[v]) v = 'kan';
+    root.setAttribute('data-dem', v);
+    for (var i = 0; i < demButtons.length; i++) demButtons[i].setAttribute('aria-pressed', demButtons[i].getAttribute('data-dem') === v ? 'true' : 'false');
+    teaRGB = hexRGB(getComputedStyle(root).getPropertyValue('--tea'));
+    try { localStorage.setItem('sis-dem', v); } catch (e) {}
+    tick(true);
+  }
+  for (var i = 0; i < demButtons.length; i++) demButtons[i].addEventListener('click', function () { setDem(this.getAttribute('data-dem')); });
+
+  var form = document.getElementById('orderForm'), msg = document.getElementById('orderMsg'), email = document.getElementById('email');
+  form.addEventListener('submit', function (e) {
+    e.preventDefault();
+    if (!email.value || !email.checkValidity()) { msg.textContent = 'Geçerli bir e-posta adresi yaz, örneğin ad@ornek.com.'; email.focus(); return; }
+    msg.textContent = 'Listeye eklendin. Demin: ' + demLabels[root.getAttribute('data-dem')] + '. (Tanıtım sayfası, adres bir yere gönderilmedi.)';
+    form.reset();
+  });
+
+  /* ------------------------------------------------ scroll'a bağlı çizimler -- */
+  function hexRGB(h) { h = h.trim().replace('#', ''); return [parseInt(h.slice(0, 2), 16), parseInt(h.slice(2, 4), 16), parseInt(h.slice(4, 6), 16)]; }
+  var paleRGB = [233, 184, 92], teaRGB = hexRGB(getComputedStyle(root).getPropertyValue('--tea'));
+  function mix(a, b, t) { return 'rgb(' + Math.round(a[0] + (b[0] - a[0]) * t) + ',' + Math.round(a[1] + (b[1] - a[1]) * t) + ',' + Math.round(a[2] + (b[2] - a[2]) * t) + ')'; }
+  function c01(v) { return v < 0 ? 0 : v > 1 ? 1 : v; }
+  function pOf(el) { return parseFloat(el.style.getPropertyValue('--sc-p')) || 0; }
+
+  var peak = document.getElementById('bardak'), tea = document.getElementById('tea'), teaTop = document.getElementById('teaTop'),
+      stream = document.getElementById('stream'), steam = document.getElementById('steam'), glow = document.getElementById('glow'),
+      pot = document.getElementById('pot'), mini = document.getElementById('miniLiquid'), bar = document.getElementById('bar'),
+      shoot = document.getElementById('surgun'), draws = shoot.querySelectorAll('.draw'), anns = shoot.querySelectorAll('.ann'),
+      darks = document.querySelectorAll('.g-night, .g-slope');
+  var last = {}, heroEl = document.querySelector('.hero');
+
+  function tick(force) {
+    // bardak: 0..0.12 sessizlik, 0.12..0.62 dolum, sonra dem tutar
+    var p = pOf(peak);
+    var f = c01((p - 0.12) / 0.5);
+    var surf = 249 - f * 215;
+    if (force || last.f !== f) {
+      tea.setAttribute('y', surf.toFixed(1)); teaTop.setAttribute('cy', surf.toFixed(1));
+      var col = mix(paleRGB, teaRGB, c01((f - 0.15) / 0.85));
+      tea.setAttribute('fill', col); stream.setAttribute('fill', col);
+      var pouring = p > 0.1 && f < 1;
+      stream.setAttribute('height', pouring ? Math.max(0, surf + 101).toFixed(1) : '0');
+      pot.style.transform = pouring || f < 0.02 ? 'none' : 'rotate(-14deg)';
+      pot.style.transformOrigin = '210px -150px';
+      steam.classList.toggle('on', f >= 1);
+      glow.style.setProperty('--glow', (f * 0.9).toFixed(3));
+      last.f = f;
+    }
+    // sürgün çizimi
+    var sp = reduce ? 1 : pOf(shoot), dp = reduce ? 1 : c01((sp - 0.18) / 0.4);
+    if (force || last.dp !== dp) {
+      for (var i = 0; i < draws.length; i++) {
+        var t = c01(dp * 1.6 - i * 0.12);
+        draws[i].style.strokeDasharray = '1'; draws[i].style.strokeDashoffset = (1 - t).toFixed(3);
+      }
+      for (var j = 0; j < anns.length; j++) anns[j].classList.toggle('on', sp >= parseFloat(anns[j].getAttribute('data-at')));
+      last.dp = dp;
+    }
+    // üst bardaki küçük bardak: sayfa ilerlemesi
+    var max = document.documentElement.scrollHeight - innerHeight;
+    var pg = max > 0 ? c01(scrollY / max) : 0;
+    mini.setAttribute('y', (252 - pg * 232).toFixed(1));
+    // bar rengi: altındaki zemin koyu mu
+    var onDark = false, probe = 30;
+    for (var k = 0; k < darks.length; k++) { var r = darks[k].getBoundingClientRect(); if (r.top <= probe && r.bottom > probe) { onDark = true; break; } }
+    bar.classList.toggle('on-dark', onDark);
+    bar.classList.toggle('solid', scrollY > heroEl.offsetHeight - innerHeight * 0.6);
+  }
+
+  var saved = null; try { saved = localStorage.getItem('sis-dem'); } catch (e) {}
+  ScrollCraft.mount(document.body);
+  setDem(saved || 'kan');
+  (function loop() { tick(false); requestAnimationFrame(loop); })();
+})();
+</script>
+</body>
+</html>
