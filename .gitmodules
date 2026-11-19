@@ -1,3 +1,6 @@
 [submodule "awesome"]
 	path = awesome
 	url = https://github.com/sindresorhus/awesome.git
+[submodule "MoneyPrinterTurbo"]
+	path = MoneyPrinterTurbo
+	url = https://github.com/harry0703/MoneyPrinterTurbo.git
