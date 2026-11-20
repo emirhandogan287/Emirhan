@@ -1,0 +1,14 @@
+{
+  "name": "dolpinhs-randevu",
+  "version": "1.0.0",
+  "private": true,
+  "description": "DOLPİNHS online randevu sayfası ve WhatsApp hatırlatma sistemi",
+  "type": "module",
+  "engines": {
+    "node": ">=22.13"
+  },
+  "scripts": {
+    "start": "node --disable-warning=ExperimentalWarning --env-file-if-exists=.env server.js",
+    "test": "node --disable-warning=ExperimentalWarning --test test/*.test.js"
+  }
+}

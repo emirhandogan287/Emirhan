@@ -1,0 +1,99 @@
+<!doctype html>
+<html lang="tr">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="robots" content="noindex">
+  <title>DOLPİNHS · Yönetim</title>
+  <link rel="icon" href="assets/favicon.svg" type="image/svg+xml">
+  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@500;600&family=Manrope:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="styles.css">
+  <style>
+    body { padding: 24px 16px 60px; }
+    .wrap { max-width: 1100px; margin: 0 auto; }
+    .top { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 12px; margin-bottom: 26px; }
+    .top h1 { font-family: var(--serif); font-weight: 500; font-size: 2rem; }
+    .pill { padding: 6px 12px; border-radius: 999px; font-size: .8rem; font-weight: 700; }
+    .pill.live { background: rgba(61,220,132,.18); color: #3ddc84; }
+    .pill.dry { background: rgba(214,180,122,.18); color: var(--gold); }
+    .bar { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; margin-bottom: 18px; }
+    .bar input, .bar select, .grid input, .grid select { padding: 11px 14px; border-radius: 12px; border: 1px solid var(--pearl-faint); background: rgba(255,255,255,.05); color: var(--pearl); font: 500 .95rem var(--sans); }
+    .bar select option, .grid select option { color: #000; }
+    .card { padding: 22px; margin-bottom: 22px; }
+    .card h2 { font-size: 1.6rem; margin-bottom: 14px; }
+    table { width: 100%; border-collapse: collapse; font-size: .9rem; }
+    th, td { text-align: left; padding: 12px 10px; border-bottom: 1px solid var(--pearl-faint); vertical-align: top; }
+    th { color: var(--pearl-dim); font-weight: 600; font-size: .78rem; text-transform: uppercase; letter-spacing: .08em; }
+    tr.cancelled td { opacity: .45; text-decoration: line-through; }
+    .rem { display: inline-block; margin: 2px 4px 2px 0; padding: 3px 8px; border-radius: 8px; font-size: .74rem; background: var(--pearl-faint); white-space: nowrap; }
+    .rem.sent { background: rgba(61,220,132,.18); color: #3ddc84; }
+    .rem.pending { background: rgba(95,211,208,.15); color: var(--aqua); }
+    .rem.failed { background: rgba(255,138,138,.18); color: var(--danger); }
+    .table-scroll { overflow-x: auto; }
+    .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(190px, 1fr)); gap: 10px; }
+    .msg { padding: 12px 14px; border-radius: 14px; background: rgba(255,255,255,.04); margin-bottom: 10px; white-space: pre-line; font-size: .88rem; }
+    .msg small { display: block; color: var(--pearl-dim); margin-bottom: 4px; }
+    .empty { color: var(--pearl-dim); padding: 14px 0; }
+    #login { max-width: 380px; margin: 14vh auto; padding: 30px; text-align: center; }
+    #login input { width: 100%; margin: 18px 0; padding: 14px; border-radius: 12px; border: 1px solid var(--pearl-faint); background: rgba(255,255,255,.05); color: var(--pearl); font: 500 1rem var(--sans); }
+    .link-btn { background: none; border: none; color: var(--danger); cursor: pointer; font: 600 .85rem var(--sans); padding: 0; }
+  </style>
+</head>
+<body>
+  <form id="login" class="glass">
+    <div class="logo" style="justify-content:center"><svg viewBox="0 0 40 40"><use href="#mark"/></svg><span>DOLPİNHS</span></div>
+    <input id="pw" type="password" placeholder="Yönetici şifresi" autocomplete="current-password" required>
+    <button class="btn" style="width:100%">Giriş</button>
+    <p class="error" id="loginErr"></p>
+  </form>
+
+  <div class="wrap" id="app" hidden>
+    <div class="top">
+      <h1>Randevular</h1>
+      <span class="pill" id="mode"></span>
+    </div>
+
+    <div class="bar">
+      <input type="date" id="from">
+      <select id="days"><option value="1">1 gün</option><option value="7" selected>7 gün</option><option value="30">30 gün</option></select>
+      <button class="btn btn-small btn-ghost" id="refresh">Yenile</button>
+    </div>
+
+    <section class="card glass">
+      <div class="table-scroll">
+        <table>
+          <thead><tr><th>Tarih</th><th>Saat</th><th>Müşteri</th><th>Hizmet</th><th>WhatsApp</th><th></th></tr></thead>
+          <tbody id="rows"></tbody>
+        </table>
+      </div>
+    </section>
+
+    <section class="card glass">
+      <h2>Telefonla gelen randevuyu ekle</h2>
+      <form id="add" class="grid">
+        <select id="aService" required></select>
+        <input type="date" id="aDate" required>
+        <input type="time" id="aTime" step="1800" required>
+        <input id="aName" placeholder="Ad Soyad" required>
+        <input id="aPhone" placeholder="05XX XXX XX XX" required>
+        <label class="check" style="margin:0;align-self:center"><input type="checkbox" id="aWa" checked><span class="box"></span><span>WhatsApp hatırlatma (müşteri onayladı)</span></label>
+        <button class="btn">Ekle</button>
+      </form>
+      <p class="error" id="addErr"></p>
+    </section>
+
+    <section class="card glass">
+      <h2>Son gönderilen mesajlar</h2>
+      <div id="messages"></div>
+    </section>
+  </div>
+
+  <svg width="0" height="0" style="position:absolute" aria-hidden="true">
+    <symbol id="mark" viewBox="0 0 40 40">
+      <path d="M6 26c4-9 12-15 22-15 3 0 5 .6 6 1.4-2 .2-3.6 1-4.6 2.2 2.6 1.4 4.2 4 4.6 7.4-2.4-2-5.4-2.8-8.6-2.4-4.6.6-8 4-9.4 8.4-1.4-2.4-1.6-4.8-.6-7.2C12 20.4 8.6 22.6 6 26z" fill="currentColor"/>
+      <path d="M4 32c6 3 13 3 18 0s12-3 16 0" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+    </symbol>
+  </svg>
+  <script src="admin.js" defer></script>
+</body>
+</html>
