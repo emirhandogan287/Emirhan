@@ -1,0 +1,346 @@
+<title>Kahve ve Okey Tanıtımı</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Unbounded:wght@600;800&family=Manrope:wght@500;700&display=swap">
+<style>
+/* Layout: a 9:16 phone stage on the left, the edit panel on the right; stacks on phones */
+:root{
+  --esp:#1c130e; --esp2:#2a1c14; --line:#3d2b20; --cream:#f4e7d4; --muted:#b9a58c;
+  --gold:#e2a63b; --felt:#1d5e46;
+  --display:"Unbounded","Arial Black",system-ui,sans-serif;
+  --body:"Manrope",system-ui,-apple-system,"Segoe UI",sans-serif;
+  color-scheme:dark;
+}
+*{box-sizing:border-box}
+body{background:var(--esp);color:var(--cream);font-family:var(--body);font-size:15px;line-height:1.5}
+.wrap{max-width:1040px;margin:0 auto;padding-block:32px 56px;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));display:grid;grid-template-columns:auto minmax(0,1fr);gap:40px;align-items:start}
+.phone{width:min(100%,calc(80vh*9/16),420px);aspect-ratio:9/16;max-width:100%;border-radius:22px;overflow:hidden;border:6px solid var(--esp2);box-shadow:0 0 0 1px var(--line)}
+.phone canvas{width:100%;height:100%;display:block}
+.panel{display:flex;flex-direction:column;gap:22px;min-width:0}
+.eyebrow{font-size:12px;font-weight:700;letter-spacing:.16em;text-transform:uppercase;color:var(--gold)}
+h1{font-family:var(--display);font-weight:800;font-size:clamp(1.8rem,4vw,2.6rem);line-height:1.05;margin:6px 0 10px;text-wrap:balance}
+p{margin:0;color:var(--muted);max-width:60ch}
+.bar{display:flex;flex-wrap:wrap;align-items:center;gap:12px}
+button{font:700 14px var(--body);color:var(--esp);background:var(--cream);border:0;border-radius:8px;padding:9px 16px;cursor:pointer}
+button.ghost{background:transparent;color:var(--cream);border:1px solid var(--line)}
+button:focus-visible,input:focus-visible{outline:2px solid var(--gold);outline-offset:2px}
+.time{font:600 14px ui-monospace,Menlo,monospace;font-variant-numeric:tabular-nums;color:var(--muted)}
+input[type=range]{width:100%;accent-color:var(--gold)}
+.scenes{display:grid;grid-template-columns:repeat(4,1fr);gap:4px;font-size:11px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--muted)}
+.scenes span{border-top:3px solid var(--line);padding-top:6px}
+.scenes span.on{border-color:var(--gold);color:var(--cream)}
+fieldset{border:1px solid var(--line);border-radius:12px;padding:18px;margin:0;display:grid;gap:14px}
+legend{padding:0 6px;font-weight:700}
+label{display:grid;gap:6px;font-size:13px;color:var(--muted)}
+input[type=text]{font:500 15px var(--body);color:var(--cream);background:var(--esp2);border:1px solid var(--line);border-radius:8px;padding:10px 12px;width:100%}
+.hint{font-size:13px}
+@media (max-width:760px){.wrap{grid-template-columns:1fr}.phone{margin-inline:auto;width:min(100%,360px)}}
+</style>
+
+<div class="wrap">
+  <div class="phone"><canvas id="cv" width="1080" height="1920" role="img" aria-label="Türk kahvesi fincanı, okey taşlarının ıstakaya dizildiği sahne ve işletme bilgileriyle biten 12 saniyelik dikey tanıtım animasyonu"></canvas></div>
+
+  <div class="panel">
+    <div>
+      <span class="eyebrow">Instagram · TikTok · 1080×1920 · 12 sn</span>
+      <h1>Kahve ve Okey Tanıtımı</h1>
+      <p>Dört sahne: taze kahve, ıstakaya dizilen taşlar, ikisi bir arada ve işletme bilgileri. Aşağıdaki metinleri değiştirdiğinizde animasyon anında güncellenir.</p>
+    </div>
+
+    <div class="bar">
+      <button id="play" type="button">Durdur</button>
+      <button id="restart" class="ghost" type="button">Baştan</button>
+      <span class="time" id="time">00.0 / 12.0 sn</span>
+    </div>
+    <input id="scrub" type="range" min="0" max="1199" value="0" aria-label="Zaman">
+    <div class="scenes" id="scenes"><span>Kahve</span><span>Okey</span><span>İkisi bir arada</span><span>Bilgiler</span></div>
+
+    <fieldset>
+      <legend>Metinler (örnek, kendinize göre değiştirin)</legend>
+      <label for="f-name">İşletme adı<input type="text" id="f-name" maxlength="28" value="Taş &amp; Telve"></label>
+      <label for="f-coffee">Kahve sahnesi başlığı<input type="text" id="f-coffee" maxlength="34" value="Taze Türk kahvesi"></label>
+      <label for="f-okey">Okey sahnesi başlığı<input type="text" id="f-okey" maxlength="34" value="Okey masaları hazır"></label>
+      <label for="f-slogan">Slogan<input type="text" id="f-slogan" maxlength="40" value="Bir kahve, bir el okey"></label>
+      <label for="f-hours">Çalışma saatleri<input type="text" id="f-hours" maxlength="34" value="Her gün 10:00 – 00:00"></label>
+      <label for="f-addr">Adres / konum<input type="text" id="f-addr" maxlength="40" value="Adresinizi buraya yazın"></label>
+    </fieldset>
+    <p class="hint">"Taş &amp; Telve" yalnızca bir isim önerisi: okey taşı ile kahve telvesinden geliyor.</p>
+  </div>
+</div>
+
+<script>
+(() => {
+const W = 1080, H = 1920, DUR = 12;
+const cv = document.getElementById('cv'), ctx = cv.getContext('2d');
+const P = { esp:'#1c130e', esp2:'#2a1c14', cream:'#f4e7d4', cream2:'#e3d2b8', gold:'#e2a63b',
+  felt:'#1d5e46', ivory:'#fbf6ea', back:'#e6d6b6', red:'#d33a2c', yellow:'#e09b1c', blue:'#2667c4', black:'#1b1b1b',
+  wood:'#8b5a35', wood2:'#6a4126', woodHi:'#a8713f', coffee:'#5a3620', foam:'#a8784c' };
+const DISP = '"Unbounded","Arial Black",sans-serif', BODY = '"Manrope",system-ui,sans-serif';
+
+const cl = (v,a=0,b=1) => Math.min(b, Math.max(a, v));
+const seg = (t,a,b) => cl((t-a)/(b-a));
+const lerp = (a,b,k) => a + (b-a)*k;
+const oCubic = t => 1 - Math.pow(1-t, 3);
+const ioCubic = t => t < .5 ? 4*t*t*t : 1 - Math.pow(-2*t+2, 3)/2;
+const oBack = t => { const c1 = 1.70158, c3 = c1+1; return 1 + c3*Math.pow(t-1,3) + c1*Math.pow(t-1,2); };
+
+/* text fields */
+const ids = ['name','coffee','okey','slogan','hours','addr'];
+const T = {};
+ids.forEach(k => {
+  const el = document.getElementById('f-'+k);
+  try { const v = localStorage.getItem('tt-'+k); if (v !== null) el.value = v; } catch (e) {}
+  T[k] = el.value;
+  el.addEventListener('input', () => { T[k] = el.value; try { localStorage.setItem('tt-'+k, el.value); } catch (e) {} draw(time); });
+});
+
+/* felt texture, drawn once */
+const felt = document.createElement('canvas'); felt.width = W; felt.height = H;
+(() => {
+  const f = felt.getContext('2d');
+  f.fillStyle = P.felt; f.fillRect(0, 0, W, H);
+  let s = 7; const rnd = () => (s = (s*16807) % 2147483647) / 2147483647;
+  for (let i = 0; i < 9000; i++) { f.fillStyle = rnd() < .5 ? 'rgba(0,0,0,.08)' : 'rgba(255,255,255,.05)'; f.fillRect(rnd()*W, rnd()*H, 2, 2); }
+  const g = f.createRadialGradient(W/2, H*.55, 200, W/2, H*.55, 1200);
+  g.addColorStop(0, 'rgba(0,0,0,0)'); g.addColorStop(1, 'rgba(0,0,0,.45)');
+  f.fillStyle = g; f.fillRect(0, 0, W, H);
+})();
+
+function rrect(x, y, w, h, r) { ctx.beginPath(); ctx.roundRect(x, y, w, h, Math.max(0, Math.min(r, w/2, h/2))); }
+function wrap(text, font, maxW) {
+  ctx.font = font; const out = []; let line = '';
+  for (const w of String(text).trim().split(/\s+/)) {
+    const test = line ? line + ' ' + w : w;
+    if (ctx.measureText(test).width > maxW && line) { out.push(line); line = w; } else line = test;
+  }
+  if (line) out.push(line);
+  if (out.length > 1 && maxW > 200) { // balance: shrink width while line count stays the same
+    let lo = 200, hi = maxW;
+    while (hi - lo > 8) { const mid = (lo + hi)/2; if (wrapRaw(text, mid).length > out.length) lo = mid; else hi = mid; }
+    const bal = wrapRaw(text, hi + 1);
+    if (bal.length === out.length) return bal;
+  }
+  return out.length ? out : [''];
+}
+function wrapRaw(text, maxW) {
+  const out = []; let line = '';
+  for (const w of String(text).trim().split(/\s+/)) {
+    const test = line ? line + ' ' + w : w;
+    if (ctx.measureText(test).width > maxW && line) { out.push(line); line = w; } else line = test;
+  }
+  if (line) out.push(line);
+  return out;
+}
+function spaced(px) { if ('letterSpacing' in ctx) ctx.letterSpacing = px; }
+
+function espressoBg() {
+  ctx.fillStyle = P.esp; ctx.fillRect(0, 0, W, H);
+  const g = ctx.createRadialGradient(W/2, 1150, 50, W/2, 1150, 900);
+  g.addColorStop(0, 'rgba(226,166,59,.20)'); g.addColorStop(1, 'rgba(226,166,59,0)');
+  ctx.fillStyle = g; ctx.fillRect(0, 0, W, H);
+}
+
+function title(eyebrow, text, u, u0, color, ebColor, top = 330) {
+  const a0 = oCubic(seg(u, u0 - .2, u0 + .4));
+  ctx.textAlign = 'center'; ctx.textBaseline = 'alphabetic';
+  ctx.globalAlpha = a0; ctx.fillStyle = ebColor; ctx.font = '700 34px ' + BODY; spaced('10px');
+  ctx.fillText(eyebrow, W/2, top); spaced('0px');
+  const font = '800 100px ' + DISP;
+  const lines = wrap(text, font, 920);
+  ctx.font = font; ctx.fillStyle = color;
+  lines.forEach((ln, i) => {
+    const a = oCubic(seg(u, u0 + i*.15, u0 + .6 + i*.15));
+    ctx.globalAlpha = a; ctx.fillText(ln, W/2, top + 130 + i*118 + (1-a)*70);
+  });
+  ctx.globalAlpha = 1;
+}
+
+function cup(x, y, s) {
+  ctx.save(); ctx.translate(x, y); ctx.scale(s, s);
+  ctx.fillStyle = 'rgba(0,0,0,.35)'; ctx.beginPath(); ctx.ellipse(0, 128, 220, 34, 0, 0, Math.PI*2); ctx.fill();
+  ctx.fillStyle = P.cream; ctx.beginPath(); ctx.ellipse(0, 105, 215, 40, 0, 0, Math.PI*2); ctx.fill();
+  ctx.fillStyle = P.cream2; ctx.beginPath(); ctx.ellipse(0, 98, 150, 24, 0, 0, Math.PI*2); ctx.fill();
+  ctx.strokeStyle = P.cream; ctx.lineWidth = 22; ctx.beginPath(); ctx.arc(116, -28, 44, -Math.PI/2, Math.PI/2); ctx.stroke();
+  ctx.beginPath(); ctx.moveTo(-122, -100); ctx.lineTo(122, -100);
+  ctx.bezierCurveTo(118, 10, 84, 96, 0, 100); ctx.bezierCurveTo(-84, 96, -118, 10, -122, -100); ctx.closePath();
+  ctx.fillStyle = P.cream; ctx.fill();
+  ctx.save(); ctx.clip(); ctx.fillStyle = P.gold; ctx.fillRect(-140, -66, 280, 14); ctx.fillRect(-140, -44, 280, 5);
+  ctx.fillStyle = 'rgba(0,0,0,.08)'; ctx.fillRect(40, -100, 100, 220); ctx.restore();
+  ctx.fillStyle = P.coffee; ctx.beginPath(); ctx.ellipse(0, -100, 122, 22, 0, 0, Math.PI*2); ctx.fill();
+  ctx.fillStyle = P.foam; ctx.beginPath(); ctx.ellipse(0, -100, 104, 16, 0, 0, Math.PI*2); ctx.fill();
+  ctx.restore();
+}
+function steam(x, y, s, prog, t) {
+  if (prog <= 0) return;
+  ctx.lineCap = 'round'; ctx.lineWidth = 12*s;
+  for (let k = 0; k < 3; k++) {
+    const bx = x + (k-1)*52*s, by = y - 140*s, len = 300*s*prog;
+    ctx.strokeStyle = `rgba(244,231,212,${.42 - k*.06})`;
+    ctx.beginPath();
+    for (let j = 0; j <= 30; j++) {
+      const yy = j/30*len, xx = Math.sin(yy/(38*s) - t*3.2 + k*2.1) * 18*s * (yy/(300*s) + .2);
+      j ? ctx.lineTo(bx + xx, by - yy) : ctx.moveTo(bx + xx, by - yy);
+    }
+    ctx.stroke();
+  }
+}
+
+function tile(cx, cy, w, h, num, color, sx, rot) {
+  if (Math.abs(sx) < .02) return;
+  ctx.save(); ctx.translate(cx, cy); ctx.rotate(rot); ctx.scale(Math.abs(sx), 1);
+  ctx.fillStyle = 'rgba(0,0,0,.3)'; rrect(-w/2 + 5, -h/2 + 9, w, h, 14); ctx.fill();
+  ctx.fillStyle = sx < 0 ? P.back : P.ivory; rrect(-w/2, -h/2, w, h, 14); ctx.fill();
+  if (sx < 0) { ctx.strokeStyle = 'rgba(106,65,38,.25)'; ctx.lineWidth = 4; rrect(-w/2 + 12, -h/2 + 12, w - 24, h - 24, 8); ctx.stroke(); }
+  else {
+    ctx.fillStyle = color; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+    ctx.font = `800 ${Math.round(h*.4)}px ${DISP}`; ctx.fillText(num, 0, -h*.1);
+    ctx.beginPath(); ctx.arc(0, h*.27, h*.055, 0, Math.PI*2); ctx.fill();
+    ctx.textBaseline = 'alphabetic';
+  }
+  ctx.restore();
+}
+
+/* ---- Scene 1: coffee (0 – 3.8) ---- */
+function s1(t) {
+  espressoBg();
+  title('KAHVE', T.coffee, t, .5, P.cream, P.gold);
+  const k = oBack(seg(t, .1, .9));
+  const y = lerp(2250, 1200, k);
+  steam(540, y, 1.25, ioCubic(seg(t, .8, 1.8)), t);
+  cup(540, y, 1.25);
+  ctx.globalAlpha = seg(t, 1.4, 2); ctx.fillStyle = P.muted || '#b9a58c'; ctx.fillStyle = '#b9a58c';
+  ctx.textAlign = 'center'; ctx.font = '700 40px ' + BODY; spaced('6px');
+  ctx.fillText(T.name.toLocaleUpperCase('tr'), W/2, 1720); spaced('0px'); ctx.globalAlpha = 1;
+}
+
+/* ---- Scene 2: okey (from 3.2) ---- */
+const TILES = [[7,'red'],[8,'red'],[9,'red'],[10,'red'],[12,'yellow'],[12,'blue'],[12,'black']];
+const TW = 104, TH = 150, RACK_Y = 1330;
+const tileX = i => i < 4 ? 120 + i*116 : 624 + (i-4)*116;
+function s2(t) {
+  const u = t - 3.2;
+  ctx.drawImage(felt, 0, 0);
+  title('OKEY', T.okey, u, .8, P.cream, P.gold);
+  const r = oCubic(seg(u, .3, .9)), ry = lerp(2100, RACK_Y, r);
+  ctx.fillStyle = 'rgba(0,0,0,.35)'; ctx.beginPath(); ctx.ellipse(540, ry + 78, 470, 26, 0, 0, Math.PI*2); ctx.fill();
+  ctx.fillStyle = P.wood; rrect(80, ry, 920, 66, 12); ctx.fill();
+  ctx.fillStyle = P.woodHi; ctx.fillRect(92, ry + 8, 896, 6);
+  ctx.fillStyle = P.wood2; ctx.fillRect(80, ry + 50, 920, 16);
+  TILES.forEach(([n, c], i) => {
+    const a = oCubic(seg(u, 1.0 + i*.13, 1.65 + i*.13));
+    const f = ioCubic(seg(u, 1.25 + i*.13, 1.7 + i*.13));
+    const x0 = 540 + (i-3)*70, y0 = -260 - (i%3)*60;
+    const x1 = tileX(i) + TW/2, y1 = RACK_Y - TH/2 + 6;
+    const cx = lerp(x0, x1, a), cy = lerp(y0, y1, a);
+    const rot = lerp((i%2 ? -1 : 1)*.7, 0, a);
+    tile(cx, cy, TW, TH, n, P[c], Math.cos(Math.PI*(1-f)), rot);
+  });
+  // group labels: "seri" (run) and "per" (set)
+  [[0, 3, 'seri', 2.75], [4, 6, 'per', 3.0]].forEach(([a, b, word, at]) => {
+    const g = oCubic(seg(u, at, at + .45));
+    if (g <= 0) return;
+    const xa = tileX(a), xb = tileX(b) + TW, ly = RACK_Y + 120;
+    ctx.strokeStyle = P.gold; ctx.lineWidth = 6; ctx.lineCap = 'round';
+    ctx.beginPath(); ctx.moveTo(xa, ly); ctx.lineTo(lerp(xa, xb, g), ly); ctx.stroke();
+    ctx.globalAlpha = g; ctx.fillStyle = P.cream; ctx.textAlign = 'center'; ctx.font = '700 42px ' + BODY;
+    ctx.fillText(word, (xa + xb)/2, ly + 64); ctx.globalAlpha = 1;
+  });
+}
+
+/* ---- Scene 3: both (from 7.6) ---- */
+function s3(t) {
+  const u = t - 7.6;
+  espressoBg();
+  const c = oBack(seg(u, .35, .9)), p = oBack(seg(u, .55, 1.0)), k = oBack(seg(u, .75, 1.25));
+  if (c > 0) { steam(300, 1000, .85*c, seg(u, .8, 1.6), t); cup(300, 1000, .85*c); }
+  if (p > 0) { ctx.save(); ctx.translate(560, 990); ctx.scale(p, p); ctx.fillStyle = P.gold; ctx.fillRect(-38, -9, 76, 18); ctx.fillRect(-9, -38, 18, 76); ctx.restore(); }
+  if (k > 0) tile(800, 985, 170*k, 245*k, 1, P.red, 1, lerp(.5, -.08, k));
+  const font = '800 92px ' + DISP, lines = wrap(T.slogan, font, 900);
+  ctx.textAlign = 'center'; ctx.font = font; ctx.fillStyle = P.cream;
+  lines.forEach((ln, i) => {
+    const a = oCubic(seg(u, 1.0 + i*.18, 1.6 + i*.18));
+    ctx.globalAlpha = a; ctx.fillText(ln, W/2, 1420 + i*112 + (1-a)*60);
+  });
+  ctx.globalAlpha = 1;
+}
+
+/* ---- Scene 4: end card (from 10.2) ---- */
+function s4(t) {
+  const u = t - 10.2;
+  ctx.fillStyle = P.cream; ctx.fillRect(0, 0, W, H);
+  ctx.textAlign = 'center';
+  const e = oCubic(seg(u, .15, .6));
+  ctx.globalAlpha = e; ctx.fillStyle = P.wood2; ctx.font = '700 36px ' + BODY; spaced('12px');
+  ctx.fillText('KAHVE  ·  OKEY', W/2, 640); spaced('0px');
+  const font = '800 128px ' + DISP, lines = wrap(T.name, font, 940);
+  ctx.font = font; ctx.fillStyle = P.esp;
+  lines.forEach((ln, i) => {
+    const a = oBack(seg(u, .2 + i*.12, .75 + i*.12));
+    ctx.globalAlpha = cl(a); ctx.fillText(ln, W/2, 820 + i*145 + (1-a)*80);
+  });
+  const ly = 820 + (lines.length - 1)*145 + 90;
+  ['red','yellow','blue','black'].forEach((c, i) => {
+    const g = ioCubic(seg(u, .45 + i*.07, .8 + i*.07));
+    ctx.globalAlpha = 1; ctx.fillStyle = P[c]; rrect(300 + i*125, ly, 110*g, 16, 8); ctx.fill();
+  });
+  const f = oCubic(seg(u, .65, 1.0));
+  ctx.globalAlpha = f; ctx.fillStyle = P.esp; ctx.font = '700 50px ' + BODY;
+  ctx.fillText(T.hours, W/2, ly + 200 + (1-f)*30);
+  ctx.fillStyle = P.wood2; ctx.font = '500 42px ' + BODY;
+  wrap(T.addr, '500 42px ' + BODY, 900).forEach((ln, i) => ctx.fillText(ln, W/2, ly + 280 + i*56 + (1-f)*30));
+  ctx.globalAlpha = 1;
+}
+
+function clipped(path, fn, t) { ctx.save(); path(); ctx.clip(); fn(t); ctx.restore(); }
+function draw(t) {
+  ctx.textBaseline = 'alphabetic';
+  if (t < 3.2) s1(t);
+  else if (t < 3.85) {
+    s1(t);
+    const e = ioCubic(seg(t, 3.2, 3.85)), y = lerp(H + 260, -260, e);
+    clipped(() => { ctx.beginPath(); ctx.moveTo(0, y + 200); ctx.lineTo(W, y - 200); ctx.lineTo(W, H); ctx.lineTo(0, H); ctx.closePath(); }, s2, t);
+  }
+  else if (t < 7.6) s2(t);
+  else if (t < 8.15) {
+    s2(t);
+    const e = ioCubic(seg(t, 7.6, 8.15));
+    clipped(() => { ctx.beginPath(); ctx.arc(540, 1000, 1250*e, 0, Math.PI*2); }, s3, t);
+  }
+  else if (t < 10.2) s3(t);
+  else if (t < 10.7) {
+    s3(t);
+    const e = ioCubic(seg(t, 10.2, 10.7));
+    clipped(() => { ctx.beginPath(); ctx.rect(0, 0, W*e, H); }, s4, t);
+  }
+  else s4(t);
+  const fade = seg(t, 11.75, 12);
+  if (fade > 0) { ctx.globalAlpha = fade; ctx.fillStyle = P.esp; ctx.fillRect(0, 0, W, H); ctx.globalAlpha = 1; }
+}
+window.__render = t => draw(t);
+
+/* playback */
+const reduce = matchMedia('(prefers-reduced-motion: reduce)').matches;
+const playBtn = document.getElementById('play'), scrub = document.getElementById('scrub'), timeEl = document.getElementById('time');
+const sceneEls = [...document.querySelectorAll('#scenes span')], bounds = [0, 3.5, 7.9, 10.45, 99];
+let time = reduce ? 11 : 0, playing = !reduce, last = performance.now();
+function ui() {
+  timeEl.textContent = `${time.toFixed(1).padStart(4,'0')} / 12.0 sn`;
+  if (document.activeElement !== scrub) scrub.value = Math.floor(time/DUR*1200);
+  sceneEls.forEach((el, i) => el.classList.toggle('on', time >= bounds[i] && time < bounds[i+1]));
+}
+function setPlaying(p) { playing = p; playBtn.textContent = p ? 'Durdur' : 'Oynat'; last = performance.now(); }
+setPlaying(playing);
+playBtn.addEventListener('click', () => setPlaying(!playing));
+document.getElementById('restart').addEventListener('click', () => { time = 0; setPlaying(true); });
+scrub.addEventListener('input', () => { setPlaying(false); time = scrub.value/1200*DUR; draw(time); ui(); });
+function loop(now) {
+  const dt = Math.min(.1, (now - last)/1000); last = now;
+  if (playing) { time = (time + dt) % DUR; draw(time); ui(); }
+  requestAnimationFrame(loop);
+}
+draw(time); ui();
+(document.fonts ? document.fonts.ready : Promise.resolve()).then(() => draw(time));
+requestAnimationFrame(loop);
+})();
+</script>
